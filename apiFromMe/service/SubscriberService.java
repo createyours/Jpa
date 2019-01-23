@@ -63,7 +63,8 @@ public class SubscriberService {
   @Autowired
   private ApplychatRepository applychatRepository;
 
-  @Autowired RecruitInfoRepository recruitInfoRepository;
+  @Autowired 
+  RecruitInfoRepository recruitInfoRepository;
   /**
    * 応募情報を保存する
    *

@@ -1,0 +1,97 @@
+CollectController:
+	/api/public/collect
+						/save:
+								(@RequestBody Collect)
+									{collectService.save}招聘信息保存
+						/search:
+								@RequestParam("playDate") String playDate, @RequestParam("area") String area,
+								@RequestParam("golfBarName") String golfBarName, @RequestParam("pageMode") String pageMode,
+								@RequestParam("memberId") String memberId, @RequestParam("roundSerialNo") String roundSerialNo
+									{collectService.search}查询招聘信息
+									
+new Specification<RecruitInfo>(){
+@Override
+public Predicate toPredicate(Root<RecruitInfo> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+									
+	List<Predicate> predicate = new ArrayList<>();								
+		Join<RecruitInfo,CourseInfo> join = root.join(root.getModel().getSingularAttribute("CourseInfo",CourseInfo.class),JoinType.INNER);
+		
+									
+									
+	}
+									
+									
+									
+									
+									
+						/cancel:
+								@RequestParam("playDate") String playDate,
+								@RequestParam("area") String area, @RequestParam("golfBarName") String golfBarName,
+								@RequestParam("pageMode") String pageMode, @RequestParam("memberId") String memberId,
+								@RequestParam("roundSerialNo") String roundSerialNo
+									{collectService.cancel}取消输入的信息
+						/deleteSelfApplyInfo:
+								@RequestParam("memberId") String memberId,@RequestParam("roundSerialNo") String roundSerialNo
+									{collectService.deleteSelfApplyInfo}删除应用信息
+						/searchSelf
+								@RequestParam("memberId") String memberId,@RequestParam("collectFlg") String collectFlg
+									{collectService.searchSelfData}查询自己的信息
+						/updateDetail
+								@RequestBody Collect collect
+									{collectService.updateDetail}更新招聘信息
+						/updateDelFlg
+								@RequestParam("roundSerialNo") String roundSerialNo
+									{collectService.updateDelFlg}更新招聘信息且DelFlg = '1'
+						/searchRakutenGolfCourseInfo
+								无参数
+									{collectService.searchRakutenGolfCourseInformation}获取高尔夫信息
+								
+GoraGolfCourseController:
+						saveGolfDetail	
+							{goraGolfCourseService.saveCourseInfo}保存高尔夫课程信息
+								
+LoginController:
+				/api/public/login
+								/login
+									@RequestParam("name") String name,@RequestParam("password") String password
+										{loginService.selectMemberInfoByName}查询用户name,password，判断是否允许登入								
+								/loginByGuest
+									@RequestParam("id") String id
+										{loginService.selectMemberInfoByGuestId}查询游客模式id，判断是否允许以游客登入
+								/regist
+									@RequestParam("email") String email,@RequestParam("authCode") String authCode, 
+									@RequestParam("password") String password,@RequestParam("name") String name, 
+									@RequestParam("dummyMemberId"
+										{loginService.insertUserData}注册
+								/sendMail
+									@RequestParam("email") String email
+										{loginService.sendAuthCode}邮件授权认证
+								/setProfile
+									@RequestBody Profile profile
+										{loginService.setProfileInfo}设置个人信息
+								/uploadIcon
+									@RequestParam("file") MultipartFile file,@RequestParam("userId") String userId
+										加载icon
+
+SubscriberController：
+				/api/public/Subscriber
+									/apply
+										@RequestBody ApplyInfo applyInfo
+											{subscriberService.apply}使用申请人信息注册更新个人资料信息·注册提交信息
+									/search
+										@RequestParam("roundSerialNo") String roundSerialNo
+											{subscriberService.search}查询申请信息
+									/agree
+										@RequestParam("roundSerialNo") String roundSerialNo,@RequestParam("regNo") String regNo
+											{subscriberService.agree}判断是否通过认证
+									/insertChat
+										@RequestParam("roundSerialNo") String roundSerialNo,@RequestParam("memberID") String memberID,
+										@RequestParam("chatContents") String chatContents
+											{subscriberService.insertChat}聊天信息登入
+									/searchChatInformation
+										@RequestParam("roundSerialNo") String roundSerialNo
+											{subscriberService.searchChatInformation}查询聊天信息
+																							
+TestController:
+	/api/hello
+	
