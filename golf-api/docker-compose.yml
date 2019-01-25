@@ -1,0 +1,13 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:5.7.21
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql_mode="NO_ENGINE_SUBSTITUTION"
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+      MYSQL_USER: golf
+      MYSQL_PASSWORD: golfpass
+      MYSQL_DATABASE: golf

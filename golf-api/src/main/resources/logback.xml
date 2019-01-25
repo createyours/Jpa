@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- Stop output INFO at start -->
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+  <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+    <property name="LOG_HOME" value="/home/ec2-user/golf/log" />
+
+  <appender name="ConsoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <!-- clrの色付け使わない。 -->
+      <!-- ちょっと見やすいように空白埋めしてるが、余計に出力されるので外したほうが良い。 -->
+      <pattern>%date{YYYY-MM-dd HH:mm:ss.SSS} %-10([%thread]) %-5level %logger{5} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}</pattern>
+      <charset>utf8</charset>
+    </encoder>
+  </appender>
+    <!-- 毎日にログファイルを出力 -->
+    <appender name="FILE"  class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/golf.log.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <!-- ログファイルは30間履歴を保存する -->
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <!-- ログファイルのサイズ  -->
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <MaxFileSize>10MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+  <root level="INFO">
+       <appender-ref ref="ConsoleAppender" />
+        <appender-ref ref="FILE" />
+  </root>
+
+  <!-- SQL文ログ出力 -->
+  <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+    <appender-ref ref="ConsoleAppender" />
+  </logger>
+  <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
+    <appender-ref ref="ConsoleAppender" />
+  </logger>
+  <logger name="org.hibernate.type.EnumType" level="TRACE" additivity="false">
+    <appender-ref ref="ConsoleAppender" />
+  </logger>
+
+  <logger name="org.leadingsoft" level="DEBUG" additivity="false">
+    <appender-ref ref="ConsoleAppender" />
+    <appender-ref ref="FILE" />
+  </logger>
+
+</configuration>
