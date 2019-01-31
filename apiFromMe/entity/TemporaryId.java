@@ -11,28 +11,25 @@ import lombok.Data;
 
 /**
  * <pre>
- * SNS情報ID
+ * 一時テーブルID
  * </pre>
  */
 @Data
-public class SNSInfoPK implements Serializable {
+public class TemporaryId implements Serializable {
 
 	/** serialVersionUID */
-	private static final long serialVersionUID = -3240859325591619509L;
+	private static final long serialVersionUID = 7078366006651960575L;
 
-	/** 会員ID */
-	private String memberID;
+	/** ID */
+	private String iD;
 
-	/** SNSID */
-	private String sNSID;
-
-	/** タイプ:FB, LINE */
-	private Integer sNSType;
+	/** タイプ */
+	private String type;
 
 	@Override
 	public int hashCode() {
 		int result = 1;
-		result = memberID.hashCode() + sNSID.hashCode() + sNSType.hashCode();
+		result = iD.hashCode() + type.hashCode();
 		return result;
 	}
 
@@ -47,9 +44,8 @@ public class SNSInfoPK implements Serializable {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		final SNSInfoPK other = (SNSInfoPK) obj;
-		if (other.getMemberID().equals(this.memberID) && other.getSNSID().equals(this.sNSID)
-				&& other.getSNSType().equals(this.sNSType)) {
+		final TemporaryId other = (TemporaryId) obj;
+		if (other.getID().equals(this.iD) && other.getType().equals(this.type)) {
 			return true;
 		}
 		return false;

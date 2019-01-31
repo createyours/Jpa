@@ -1,88 +1,61 @@
+//****************************************************************************//
+// システム         : Golf
+//----------------------------------------------------------------------------//
+//                (c)Copyright 2018 LeadingSoft All rights reserved.
+//============================================================================//
 package org.leadingsoft.golf.api.entity;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
+
+/**
+ * <pre>
+ * 一時テーブルエンティティ
+ * </pre>
+ */
+@Data
 @Entity
-@Table(name = "temporary")
-@IdClass(TemporaryPK.class)
+@Table(name = "Temporary")
+@IdClass(TemporaryId.class)
 public class Temporary implements Serializable {
-	
-	   
-	 //ID
-	  @Id
-      private  String iD;
-     
-	 //タイプ
-	  @Id
-      private  String type;
-     
-	 //一時名
-      private  String TemporaryName;
-     
-	 //一時値
-      private  String TemporaryValue;
-     
-	 //作成日時
-      private  String InsTstmp;
-     
-	 //有効期限
-      private  String expire;
 
-	public String getID() {
-		return iD;
-	}
+	/** serialVersionUID */
+	private static final long serialVersionUID = -5963759943001690211L;
 
-	public void setID(String iD) {
-		this.iD = iD;
-	}
+	/** ID */
+	@Id
+	@JsonProperty(value = "ID")
+	@Column(name = "ID")
+	private String iD;
 
-	public String getType() {
-		return type;
-	}
+	/** タイプ */
+	@Id
+	@JsonProperty(value = "type")
+	private String type;
 
-	public void setType(String type) {
-		this.type = type;
-	}
+	/** 一時名 */
+	@JsonProperty(value = "TemporaryName")
+	private String temporaryName;
 
-	public String getTemporaryName() {
-		return TemporaryName;
-	}
+	/** 一時値 */
+	@JsonProperty(value = "TemporaryValue")
+	private String temporaryValue;
 
-	public void setTemporaryName(String temporaryName) {
-		this.TemporaryName = temporaryName;
-	}
+	/** 作成日時 */
+	@JsonProperty(value = "InsTstmp")
+	private String insTstmp;
 
-	public String getTemporaryValue() {
-		return TemporaryValue;
-	}
-
-	public void setTemporaryValue(String temporaryValue) {
-		this.TemporaryValue = temporaryValue;
-	}
-
-	public String getInsTstmp() {
-		return InsTstmp;
-	}
-
-	public void setInsTstmp(String insTstmp) {
-		this.InsTstmp = insTstmp;
-	}
-
-	public String getExpire() {
-		return expire;
-	}
-
-	public void setExpire(String expire) {
-		this.expire = expire;
-	}
-     
-      
-
-	
+	/** 有効期限 */
+	@JsonProperty(value = "expire")
+	private String expire;
 
 }

@@ -19,21 +19,24 @@ import org.leadingsoft.golf.api.code.CollectStateCode;
 import org.leadingsoft.golf.api.code.MatchingCode;
 import org.leadingsoft.golf.api.code.ResultCode;
 import org.leadingsoft.golf.api.code.SexCode;
-import org.leadingsoft.golf.api.entity.Applychat;
+import org.leadingsoft.golf.api.entity.ApplyChat;
 import org.leadingsoft.golf.api.entity.Applyinfo;
 import org.leadingsoft.golf.api.entity.MemberInfo;
 import org.leadingsoft.golf.api.model.ApplyInfo;
 import org.leadingsoft.golf.api.model.DataResult;
 import org.leadingsoft.golf.api.repository.ApplyInfoRepository;
-import org.leadingsoft.golf.api.repository.ApplychatRepository;
+import org.leadingsoft.golf.api.repository.ApplyChatRepository;
 import org.leadingsoft.golf.api.repository.MemberInfoRepository;
 import org.leadingsoft.golf.api.repository.RecruitInfoRepository;
+import org.leadingsoft.golf.api.util.DataConvertUtils;
 import org.leadingsoft.golf.api.util.DateLogicUtils;
 import org.leadingsoft.golf.api.util.RandomUtils;
 import org.leadingsoft.golf.api.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -61,17 +64,15 @@ public class SubscriberService {
   private MemberInfoRepository memberInfoRepository;
   
   @Autowired
-  private ApplychatRepository applychatRepository;
+  private ApplyChatRepository applychatRepository;
 
-  @Autowired 
-  RecruitInfoRepository recruitInfoRepository;
+  @Autowired RecruitInfoRepository recruitInfoRepository;
   /**
    * 応募情報を保存する
    *
    * @param collect 募集情報
    * @return 保存結果
    */
-  
   public DataResult<String> apply(ApplyInfo applyInfo) {
 	    try {
 	    	
@@ -85,9 +86,9 @@ public class SubscriberService {
 					
 					List<Predicate> predicateList = new ArrayList<Predicate>();	
 					
-					Path<String> exp1 = root.get("memberid");
-					Path<Integer> exp2 = root.get("roundserialno");
-					Path<String> exp3 = root.get("apovstatus");
+					Path<String> exp1 = root.get("memberId");
+					Path<Integer> exp2 = root.get("roundSerialNo");
+					Path<String> exp3 = root.get("apovStatus");
 					
 					CriteriaBuilder.In<String> in =  criteriaBuilder.in(exp3);
 					in.value(nullToString(ApovStatusCode.UNApov.code(), true));
@@ -102,15 +103,6 @@ public class SubscriberService {
 	    	};
 	    	List<Applyinfo> list = applyInfoRepository.findAll(specification);
 	    	
-	    	System.out.println(list.size()+"----------------------");
-	    	Iterator<Applyinfo> it = list.iterator();
-	    	while(it.hasNext()){
-	    		Applyinfo ai = it.next();
-	    		
-	    		System.out.println(ai.getApovstatus()+ai.getCancelflag()+ai.getMemberid()+"---------");
-	    	}
-	    	System.out.println("----------------------");
-	    	
 	    	
 	      if (list != null && list.size() > 0) {
 	        return new DataResult<String>(ResultCode.NG.code(), "該当する募集を応募しました。");
@@ -121,7 +113,7 @@ public class SubscriberService {
 	      while (true) {
 	        regNo = RandomUtils.getRandomNumber(8);
 	        
-	        List<Applyinfo> applyinfoList = applyInfoRepository.findByRegno(Integer.parseInt(regNo));
+	        List<Applyinfo> applyinfoList = applyInfoRepository.findByRegNo(Integer.parseInt(regNo));
 	        
 	        if (applyinfoList == null || applyinfoList.size() == 0) {
 	          break;
@@ -129,11 +121,11 @@ public class SubscriberService {
 	      }
 	      
 	      Applyinfo applyinfo = new Applyinfo();
-	      applyinfo.setRoundserialno(Integer.parseInt(nullToString(applyInfo.getRoundSerialNo(), false)));
-	      applyinfo.setMemberid(nullToString(applyInfo.getMemberID(), true));
-	      applyinfo.setRegno(Integer.parseInt(nullToString(regNo, false)));
+	      applyinfo.setRoundSerialNo(Integer.parseInt(nullToString(applyInfo.getRoundSerialNo(), false)));
+	      applyinfo.setMemberId(nullToString(applyInfo.getMemberID(), true));
+	      applyinfo.setRegNo(Integer.parseInt(nullToString(regNo, false)));
 	      applyinfo.setComments(nullToString(applyInfo.getComments(), true));
-	      applyinfo.setApovstatus(nullToString(ApovStatusCode.UNApov.code(), true));
+	      applyinfo.setApovStatus(nullToString(ApovStatusCode.UNApov.code(), true));
 	      //存入的数据中regno，和roundserialno数值有变
 	      applyInfoRepository.save(applyinfo);
 
@@ -155,7 +147,7 @@ public class SubscriberService {
 	      memberInfo.setName(nullToString(applyInfo.getName(), true));
 	      memberInfo.setKana(nullToString(applyInfo.getKana(), true));
 	      memberInfo.setSex(nullToString(applyInfo.getSex(), true));
-	      memberInfo.setPlayYears(nullToString(applyInfo.getPlayYears(),false));
+	      memberInfo.setPlayYears(Integer.valueOf(nullToString(applyInfo.getPlayYears(),false)));
 	      memberInfo.setTelNo(nullToString(applyInfo.getTelNo(), true));
 	      memberInfo.setState(nullToString(applyInfo.getState(), true));
 	      memberInfoRepository.save(memberInfo);
@@ -237,7 +229,6 @@ public class SubscriberService {
    * @return
    */
   public DataResult<List> search(String roundSerialNo) {
-	    try {
 		      // 該当する未承認の応募情報を検索する
 	    	Specification<Applyinfo> specification = new Specification<Applyinfo>(){
 
@@ -249,14 +240,17 @@ public class SubscriberService {
 					
 					List<Predicate> predicateList = new ArrayList<Predicate>();	
 					
-					Path<String> exp1 = root.get("roundserialno");
-					Path<Integer> exp2 = root.get("apovstatus");
+					CriteriaQuery<Applyinfo> applyinfoQuery = criteriaBuilder.createQuery(Applyinfo.class);
+					Join<MemberInfo,Applyinfo> join = root.join("memberInfo",JoinType.INNER);
+					
+					Path<String> exp1 = root.get("roundSerialNo");
+					Path<Integer> exp2 = root.get("apovStatus");
 					
 					predicateList.add(criteriaBuilder.equal(exp1.as(Integer.class), Integer.parseInt(nullToString(roundSerialNo, false))));
 					predicateList.add(criteriaBuilder.or(criteriaBuilder.isNull(exp2),criteriaBuilder.notEqual(exp2, ApovStatusCode.ApovNG.code())));
 					
 					Predicate[] p = new Predicate[predicateList.size()];
-					return criteriaBuilder.and(predicateList.toArray(p));
+					return applyinfoQuery.select(join).where(criteriaBuilder.and(predicateList.toArray(p))).getRestriction();
 				}
 	    	};
 	    	List<Applyinfo> applyinfoList = applyInfoRepository.findAll(specification);
@@ -264,11 +258,26 @@ public class SubscriberService {
 	      if (applyinfoList == null || applyinfoList.size() == 0) {
 	        return new DataResult<List>(ResultCode.NG.code(), "応募情報がありません");
 	      }
-	      return new DataResult<List>(applyinfoList);
-	    } catch (Exception e) {
-	      logger.error(e.getMessage());
-	      return new DataResult<List>(ResultCode.NG.code(), "応募情報が取得失敗しました。");
-	    }
+
+			// 情報をHashMap形式に返却する
+			List<Map<String, Object>> mapList = new ArrayList<Map<String, Object>>();
+			for (Applyinfo applyInfo : applyinfoList) {
+				try {
+					// 会員情報以外の内容をMapに変換する
+					Map<String, Object> map = DataConvertUtils.convertObjectToMap(applyInfo,
+							new String[] { "memberInfo", "serialVersionUID" });
+					// 会員情報を取得して、Mapに変換する
+					MemberInfo memInfo = applyInfo.getMemberInfo();
+					Map<String, Object> mapMember = DataConvertUtils.convertObjectToMap(memInfo,
+							new String[] { "applyInfoList", "serialVersionUID", "applyChatList" });
+					map.putAll(mapMember);
+					mapList.add(map);
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+					return new DataResult<List>(ResultCode.NG.code(), "応募情報がありません");
+				}
+			}
+			return new DataResult<List>(mapList);
 	  }
   
   
@@ -305,37 +314,14 @@ public class SubscriberService {
   public DataResult<String> agree(String roundSerialNo, String regNo) {
 	    try {
 	      // 該当する未承認の応募情報を検索する
-	    	Specification<Applyinfo> specification = new Specification<Applyinfo>(){
-
-				private static final long serialVersionUID = 1L;
-				
-				@Override
-				public Predicate toPredicate(Root<Applyinfo> root, CriteriaQuery<?> query,
-						CriteriaBuilder criteriaBuilder) {
-					
-					List<Predicate> predicateList = new ArrayList<Predicate>();	
-					
-					Path<Integer> exp1 = root.get("roundserialno");
-					Path<Integer> exp2 = root.get("regno");
-					Path<String> exp3 = root.get("apovstatus");
-					
-					predicateList.add(criteriaBuilder.equal(exp1.as(Integer.class), nullToString(roundSerialNo, false)));
-					predicateList.add(criteriaBuilder.equal(exp2.as(Integer.class), nullToString(regNo, false)));
-					predicateList.add(criteriaBuilder.equal(exp3,ApovStatusCode.UNApov.code()));
-					
-					Predicate[] p = new Predicate[predicateList.size()];
-					return criteriaBuilder.and(predicateList.toArray(p));
-				}
-	    	};
+	    	boolean existsFlag = applyInfoRepository.existsByRoundSerialNoAndRegNoAndApovStatus(Integer.valueOf(roundSerialNo), Integer.valueOf(regNo), ApovStatusCode.UNApov.code());
 	    	
-	    	List<Applyinfo> applyInfoList = applyInfoRepository.findAll(specification);
-	    	
-	      if (applyInfoList == null || applyInfoList.size() == 0) {
+	      if (!existsFlag) {
 	        return new DataResult<String>(ResultCode.NG.code(), "該当する応募情報が承認できません");
 	      }
 	      
 	      String collectcount = null;
-	      List<Integer> list =new ArrayList();
+	      List<Integer> list =new ArrayList<Integer>();
 	      list = recruitInfoRepository.getCountByRoundSerialNo(Integer.valueOf(roundSerialNo));
 
 	      
@@ -430,18 +416,18 @@ public class SubscriberService {
    */
   public DataResult<String> insertChat(String roundSerialNo, String memberID, String chatContents) {
 	    int sortOrder = 0;
-	    int sunNum = applychatRepository.countByRoundserialno(Integer.parseInt(roundSerialNo));//是否有类型转换
+	    int sunNum = applychatRepository.countByRoundSerialNo(Integer.parseInt(roundSerialNo));//是否有类型转换
 	    sortOrder = sunNum + 1;
 
 	    Calendar cal = dateLogicUtils.getCurrent();
 	    String insTstmp = dateLogicUtils.getCurrentTimeString(cal);
 	    
-	    Applychat applychat = new Applychat();
-	    applychat.setRoundserialno(Integer.parseInt(nullToString(roundSerialNo, false)));
-	    applychat.setMemberid(nullToString(memberID, true));
-	    applychat.setChatcontents(nullToString(chatContents, true));
-	    applychat.setSortorder(Integer.parseInt(nullToString(String.valueOf(sortOrder), false)));
-	    applychat.setRegdate(nullToString(insTstmp, true));
+	    ApplyChat applychat = new ApplyChat();
+	    applychat.setRoundSerialNo(Integer.parseInt(nullToString(roundSerialNo, false)));
+	    applychat.setMemberId(nullToString(memberID, true));
+	    applychat.setChatContents(nullToString(chatContents, true));
+	    applychat.setSortOrder(Integer.parseInt(nullToString(String.valueOf(sortOrder), false)));
+	    applychat.setRegDate(nullToString(insTstmp, true));
 	    applychatRepository.save(applychat);
 	    
 	    return new DataResult<String>(ResultCode.OK.code(), "チャット情報が登録しました。");
@@ -473,33 +459,45 @@ public class SubscriberService {
    */
   
   public DataResult<List> searchChatInformation(String roundSerialNo) {
-	    try {
 	    	
-	    	Specification<Applychat> specification = new Specification<Applychat>(){
-
+	    	Specification<ApplyChat> specification = new Specification<ApplyChat>(){
 				private static final long serialVersionUID = 1L;
-
+				
 				@Override
-				public Predicate toPredicate(Root<Applychat> root, CriteriaQuery<?> query,
+				public Predicate toPredicate(Root<ApplyChat> root, CriteriaQuery<?> query,
 						CriteriaBuilder criteriaBuilder) {
 
-					Join<Applychat,MemberInfo> joinMemberInfo = root.join("memberInfo",JoinType.INNER);
+					CriteriaQuery<ApplyChat> applyChatQuery = criteriaBuilder.createQuery(ApplyChat.class);
+					Join<MemberInfo,ApplyChat> join = root.join("memberInfo",JoinType.INNER);
 					
-					Predicate p1 = criteriaBuilder.equal(root.get("roundserialno"),Integer.parseInt(nullToString(roundSerialNo, false)));
-					query.where(p1);
-					query.orderBy(criteriaBuilder.desc(root.get("sortorder").as(Integer.class)));
-					return query.getRestriction();
+					applyChatQuery.select(join).where(criteriaBuilder.equal(root.get("roundSerialNo"), roundSerialNo));
+					return applyChatQuery.getRestriction();
 				}
 	    	};
 	    	
-	    	List<Applychat> applychatList = applychatRepository.findAll(specification);
-	    	
-	      return new DataResult<List>(applychatList);
-	    } catch (Exception e) {
-	      logger.error(e.getMessage());
-	      return new DataResult<List>(ResultCode.NG.code(), "チャット情報が取得しません。");
-	    }
-	  }
+	    	List<ApplyChat> applyChatList = applychatRepository.findAll(specification,new Sort(Direction.DESC,"sortOrder"));
+	    	// 検索結果がない場合、空白リストを返却する
+			if (null == applyChatList || applyChatList.size() == 0) {
+				return new DataResult<List>(applyChatList);
+			}
+			// データが存在する場合、マップに変換して返却する
+			List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+			for (ApplyChat applyChat : applyChatList) {
+				try {
+					Map<String, Object> applyMap = DataConvertUtils.convertObjectToMap(applyChat,
+							new String[] { "serialVersionUID", "memberInfo" });
+					// 会員情報をマップに変換する
+					Map<String, Object> memMap = DataConvertUtils.convertObjectToMap(applyChat.getMemberInfo(),
+							new String[] { "serialVersionUID", "applyInfoList", "applyChatList" });
+					applyMap.putAll(memMap);
+					list.add(applyMap);
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+					return new DataResult<List>(ResultCode.NG.code(), "チャット情報が取得しません。");
+				}
+			}
+			return new DataResult<List>(list);
+		}
   
 /*  public DataResult<List> searchChatInformation(String roundSerialNo) {
     try {

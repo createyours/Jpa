@@ -7,12 +7,12 @@ import java.util.Map;
 import org.leadingsoft.golf.api.code.ResultCode;
 import org.leadingsoft.golf.api.code.SexCode;
 import org.leadingsoft.golf.api.entity.MemberInfo;
-import org.leadingsoft.golf.api.entity.SnsInfo;
+import org.leadingsoft.golf.api.entity.SNSInfo;
 import org.leadingsoft.golf.api.entity.Temporary;
 import org.leadingsoft.golf.api.model.DataResult;
 import org.leadingsoft.golf.api.model.Profile;
 import org.leadingsoft.golf.api.repository.MemberInfoRepository;
-import org.leadingsoft.golf.api.repository.SnsinfoRepository;
+import org.leadingsoft.golf.api.repository.SNSinfoRepository;
 import org.leadingsoft.golf.api.repository.TemporaryRepository;
 import org.leadingsoft.golf.api.util.DateLogicUtils;
 import org.leadingsoft.golf.api.util.IdGenerationLogic;
@@ -38,7 +38,7 @@ public class LoginService {
   @Autowired
   private MemberInfoRepository memberInfoRepository;
   @Autowired
-  private SnsinfoRepository snsInfoRepository;
+  private SNSinfoRepository snsInfoRepository;
   @Autowired
   private TemporaryRepository temporaryRepository;
   
@@ -69,14 +69,14 @@ public class LoginService {
    */
 
   public String selectMemberInfoByGuestId(String id) {  	
-	  	SnsInfo snsInfo = snsInfoRepository.findBySNSID(id);
+	  	SNSInfo snsInfo = snsInfoRepository.findBySNSID(id);
 	  	String memberId;
 	  	if(snsInfo !=null){
 	  		return snsInfo.getMemberID();
 	  	}else{
 	  		try {
 				memberId =IdGenerationLogic.getId();
-				snsInfo = new SnsInfo();
+				snsInfo = new SNSInfo();
 				snsInfo.setMemberID(getDataForInsert(memberId));
 				snsInfo.setSNSID(getDataForInsert(id));
 				snsInfo.setSNSType(0);
@@ -155,13 +155,13 @@ public class LoginService {
 	    }
 	      try {
 			String memberId = IdGenerationLogic.getId();
-			MemberInfo memberInfo1 = new MemberInfo();
+			MemberInfo memberInfo = new MemberInfo();
 			
-			memberInfo1.setMemberID(memberId);
-			memberInfo1.setEmail(getDataForInsert(email));
-			memberInfo1.setPassword(PasswordUtils.getEncoderPassword(password));
-			memberInfo1.setNickname(getDataForInsert(name));
-			memberInfoRepository.save(memberInfo1);
+			memberInfo.setMemberID(memberId);
+			memberInfo.setEmail(getDataForInsert(email));
+			memberInfo.setPassWord(PasswordUtils.getEncoderPassword(password));
+			memberInfo.setNickName(getDataForInsert(name));
+			memberInfoRepository.save(memberInfo);
 			return new DataResult<String>(memberId);
 		} catch (Exception e) {
 		      logger.error(e.getMessage());
@@ -329,13 +329,13 @@ public class LoginService {
       }
       
       MemberInfo memberInfo = memberInfoList.get(0);
-      memberInfo.setNickname(getDataForInsert(profile.getNickname()));
+      memberInfo.setNickName(getDataForInsert(profile.getNickname()));
       memberInfo.setName(getDataForInsert(profile.getName()));
       memberInfo.setKana(getDataForInsert(profile.getKana()));
       memberInfo.setSex(getDataForInsert(profile.getSex()));
-      memberInfo.setPlayYears(getDataForInsert(profile.getPlayYears()));
-      memberInfo.setAverageScore(getDataForInsert(profile.getAverageScore()));
-      memberInfo.setPlayStyle(getDataForInsert(profile.getPlayStyle()));
+      memberInfo.setPlayYears(Integer.valueOf(getDataForInsert(profile.getPlayYears())));
+      memberInfo.setAverageScore(Integer.valueOf(getDataForInsert(profile.getAverageScore())));
+      memberInfo.setPlayStyle(Integer.valueOf(getDataForInsert(profile.getPlayStyle())));
       memberInfo.setNotes(getDataForInsert(profile.getNotes()));
       memberInfo.setTelNo(getDataForInsert(profile.getTelNo()));
       memberInfo.setState(getDataForInsert(profile.getState()));
@@ -428,7 +428,8 @@ public class LoginService {
 
   private String getDataForInsert(String target) {//如果不为空返回当前字符串，为空返回null
     if (StringUtils.isNotEmpty(target)) {
-      return "'" + target + "'";
+      //return "'" + target + "'";
+    	return target;
     }
     return null;
   }

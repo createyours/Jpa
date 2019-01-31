@@ -1,8 +1,9 @@
 package org.leadingsoft.golf.api.repository;
 
-import org.leadingsoft.golf.api.entity.SnsInfo;
+import org.leadingsoft.golf.api.entity.SNSInfo;
+import org.leadingsoft.golf.api.entity.SNSInfoPK;
 
-public interface SnsinfoRepository extends BaseRepository<SnsInfo,Long> {
-	SnsInfo findBySNSID(String SNSID);
+public interface SNSinfoRepository extends BaseRepository<SNSInfo,SNSInfoPK> {
+	SNSInfo findBySNSID(String SNSID);
 
 }

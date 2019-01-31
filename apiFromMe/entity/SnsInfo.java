@@ -1,3 +1,8 @@
+//****************************************************************************//
+// システム         : Golf
+//----------------------------------------------------------------------------//
+//                (c)Copyright 2018 LeadingSoft All rights reserved.
+//============================================================================//
 package org.leadingsoft.golf.api.entity;
 
 import java.io.Serializable;
@@ -7,66 +12,39 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 
-
+/**
+ * <pre>
+ * SNS情報エンティティ
+ * </pre>
+ */
+@Data
 @Entity
-@Table(name = "Snsinfo")
-@IdClass(SnsInfoPK.class)
-public class SnsInfo implements Serializable{
-	/**
-	 * 
-	 */
+@Table(name = "SNSInfo")
+@IdClass(SNSInfoPK.class)
+public class SNSInfo implements Serializable {
+
+	/** serialVersionUID */
+	private static final long serialVersionUID = -5377357233906609264L;
+
+	/** 会員ID */
 	@Id
+	@JsonProperty(value = "MemberID")
 	private String memberID;
-	
-	@Id
+
+	/** SNSID */
+	@JsonProperty(value = "SNSID")
 	private String sNSID;
 	
-	@Id
-	private int sNSType;
-	private int authFlag;
+	/** タイプ:FB, LINE */
+	@JsonProperty(value = "SNSType")
+	private Integer sNSType;
 
-	
-	public SnsInfo( ){}
+	/** 認証フラグ */
+	@JsonProperty(value = "AuthFlag")
+	private Integer authFlag;
 
-	
-	public String getMemberID() {
-		return memberID;
-	}
-
-
-	public void setMemberID(String memberID) {
-		this.memberID = memberID;
-	}
-
-	public String getSNSID() {
-		return sNSID;
-	}
-
-
-	public void setSNSID(String sNSID) {
-		this.sNSID = sNSID;
-	}
-
-	public int getSNSType() {
-		return sNSType;
-	}
-
-
-	public void setSNSType(int sNSType) {
-		this.sNSType = sNSType;
-	}
-
-
-	public int getAuthFlag() {
-		return authFlag;
-	}
-
-
-	public void setAuthFlag(int authFlag) {
-		this.authFlag = authFlag;
-	}
-	
-	
 }

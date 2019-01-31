@@ -1,8 +1,9 @@
 package org.leadingsoft.golf.api.repository;
 
-import org.leadingsoft.golf.api.entity.Applychat;
+import org.leadingsoft.golf.api.entity.ApplyChat;
+import org.leadingsoft.golf.api.entity.ApplyChatPK;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface ApplychatRepository extends BaseRepository<Applychat,Long>, JpaSpecificationExecutor<Applychat> {
-	int countByRoundserialno(int roundserialno);
+public interface ApplyChatRepository extends BaseRepository<ApplyChat,ApplyChatPK>, JpaSpecificationExecutor<ApplyChat> {
+	int countByRoundSerialNo(int roundserialno);
 }

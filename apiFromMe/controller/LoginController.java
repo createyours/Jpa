@@ -75,17 +75,18 @@ public class LoginController {
   @SuppressWarnings("rawtypes")
   @GetMapping("/login")
   @ResponseBody
-  public DataResult<MemberInfo> doLogin(@RequestParam("name") String nameOrEmail,
+  public DataResult<List> doLogin(@RequestParam("name") String nameOrEmail,
       @RequestParam("password") String password) {
     List<MemberInfo> memberInfoList = loginService.selectMemberInfoByName(nameOrEmail);
     if (memberInfoList == null) {
-      return new DataResult<MemberInfo>(ResultCode.NG.code(), "データを存在しません。");
+      return new DataResult<List>(ResultCode.NG.code(), "データを存在しません。");
     }
-    String passWordDB = memberInfoList.get(0).getPassword().toString();
-   if(passWordDB.equals(password)){
-	   return new DataResult<MemberInfo>(ResultCode.NG.code(),"パスワードが不正です。");  
-   }
-   return new DataResult<MemberInfo>(memberInfoList.get(0));//返回集合
+    String passWordDB = memberInfoList.get(0).getPassWord().toString();
+    BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    if (!encoder.matches(password, passWordDB)) {//方法中前一个参数为前端传来的值（例如123），后一个为数据库中需要对比的值（已加密存入数据库的密码）
+        return new DataResult<List>(ResultCode.NG.code(), "パスワードが不正です。");
+      }
+   return new DataResult<List>(memberInfoList);//返回集合
    
   }
 

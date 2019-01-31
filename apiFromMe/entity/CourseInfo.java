@@ -1,101 +1,91 @@
+//****************************************************************************//
+// システム         : Golf
+//----------------------------------------------------------------------------//
+//                (c)Copyright 2018 LeadingSoft All rights reserved.
+//============================================================================//
 package org.leadingsoft.golf.api.entity;
 
 import java.io.Serializable;
+import java.util.List;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import lombok.Data;
 
 /**
-*  コース情報:ゴルフ場基本情報
-*
-*/
-@Entity
+ * <pre>
+ * コース情報エンティティ
+ * </pre>
+ */
 @Data
-@Table(name="courseinfo")
-public class CourseInfo implements Serializable{
+@Entity
+@Table(name = "CourseInfo")
+public class CourseInfo implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    @Id
-    /**
-    * コースid
-    */
-    private String iD;
+	/** serialVersionUID */
+	private static final long serialVersionUID = 1189961311319701025L;
 
-    /**
-    * コース名
-    */
-    private String name;
+	/** コースID */
+	@Column(name = "ID")
+	@Id
+	private String id;
 
-    /**
-    * かな名
-    */
-    private String name_k;
+	/** コース名 */
+	private String name;
 
-    /**
-    * 英語名
-    */
-    private String name_e;
+	/** かな名 */
+	@Column(name = "Name-k")
+	private String name_k;
 
-    /**
-    * golfcoursename
-    */
-    private String golfcoursename;
+	/** 英語名 */
+	@Column(name = "Name-e")
+	private String name_e;
 
-    /**
-    * 都道府県
-    */
-    private String state;
+	/** ゴルフコース名 */
+	private String golfCourseName;
 
-    /**
-    * 住所
-    */
-    private String address;
+	/** 都道府県 */
+	private String state;
 
-    /**
-    * 電話番号
-    */
-    private String tel;
+	/** 住所 */
+	private String address;
 
-    /**
-    * 経度
-    */
-    private float longitude;
+	/** 電話番号 */
+	private String tel;
 
-    /**
-    * 緯度
-    */
-    private float latitude;
+	/** 経度 */
+	private Float longitude;
 
-    /**
-    * 説明
-    */
-    private String caption;
+	/** 緯度 */
+	private Float latitude;
 
-    /**
-    * コースタイプ:山岳、丘陵、林間など
-    */
-    private int type;
+	/** 説明 */
+	private String caption;
 
-    /**
-    * 評価１:楽天評価
-    */
-    private float point1;
+	/** コースタイプ */
+	private Integer type;
 
-    /**
-    * 評価２:gdo評価
-    */
-    private float point2;
+	/** 評価１ */
+	private Float point1;
 
-    /**
-    * 評価３:その他評価
-    */
-    private float point3;
+	/** 評価２ */
+	private Float point2;
 
-    /**
-    * その他
-    */
-    private String other;
+	/** 評価３ */
+	private Float point3;
+
+	/** その他 */
+	private String others;
+	
+	@OneToMany(mappedBy="courseInfo",cascade=CascadeType.ALL,fetch=FetchType.LAZY)
+    private List<RecruitInfo> recruitInfoList;
+	
 }

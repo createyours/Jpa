@@ -7,7 +7,8 @@ import java.util.Map;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -18,12 +19,14 @@ import org.leadingsoft.golf.api.code.MatchingCode;
 import org.leadingsoft.golf.api.code.ResultCode;
 import org.leadingsoft.golf.api.entity.Applyinfo;
 import org.leadingsoft.golf.api.entity.CourseInfo;
+import org.leadingsoft.golf.api.entity.RakutenGolfCourseInfo;
 import org.leadingsoft.golf.api.entity.RecruitInfo;
 import org.leadingsoft.golf.api.model.Collect;
 import org.leadingsoft.golf.api.model.CollectSearchResult;
 import org.leadingsoft.golf.api.model.DataResult;
 import org.leadingsoft.golf.api.repository.ApplyInfoRepository;
 import org.leadingsoft.golf.api.repository.CourseInfoRepository;
+import org.leadingsoft.golf.api.repository.RakutenGolfCourseInfoRepository;
 import org.leadingsoft.golf.api.repository.RecruitInfoRepository;
 import org.leadingsoft.golf.api.util.DateLogicUtils;
 import org.leadingsoft.golf.api.util.IdGenerationLogic;
@@ -32,8 +35,10 @@ import org.leadingsoft.golf.api.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -58,6 +63,8 @@ public class CollectService {
   private CourseInfoRepository courseInfoRepository;
   @Autowired
   private ApplyInfoRepository applyInfoRepository;
+  @Autowired
+  private RakutenGolfCourseInfoRepository  rakutenGolfCourseInfoRepository;
 
   final static String PRE_DATE = "0";
   final static String CUR_DATE = "1";
@@ -71,100 +78,130 @@ public class CollectService {
    */
   
   public DataResult<String> save(Collect collect) {
-	    try {
-	      Calendar cal = dateLogicUtils.getCurrent();
-	      String InsTstmp = dateLogicUtils.getCurrentTimeString(cal);
-	      // 募集IDを生成する
-	      String roundSerialNo;
-	      while (true) {
-	        roundSerialNo = RandomUtils.getRandomNumber(8);
-	        RecruitInfo recruitInfo = recruitInfoRepository.findByRoundSerialNo(Integer.parseInt(roundSerialNo));
+			try {
+				Calendar cal = dateLogicUtils.getCurrent();
+				String InsTstmp = dateLogicUtils.getCurrentTimeString(cal);
+				while (true) {
+					// 募集IDを生成する
+					String roundSerialNo = RandomUtils.getRandomNumber(8);
+					boolean existsFlg = recruitInfoRepository.existsByRoundSerialNo(Integer.parseInt(roundSerialNo));
+					if (!existsFlg) {
+						collect.setRoundSerialNo(roundSerialNo);
+						break;
+					}
+				}
 
-	        if(recruitInfo == null){
-	        	collect.setRoundSerialNo(roundSerialNo);
-	        	break;
-	        }
-	      }
-	      String courseId = IdGenerationLogic.getId(2);//10改为2，data to lone for column
-	      collect.setCourseID(courseId);
-	      collect.setRegDate(InsTstmp);
-	      String playStyle = collect.getPlayStyle();
-	      if (StringUtils.isNotEmpty(playStyle)) {
-	        collect.setPlayStyle("エンジョイ".equals(playStyle) ? "0" : "1");
-	      }
-	      String playDate = collect.getPlayDate();
-	      if (StringUtils.isNotEmpty(playDate)) {
-	        playDate = playDate.replaceAll("/", "");
-	        collect.setPlayDate(playDate);
-	      }
-	      String startTime = collect.getStartTime();
-	      if (StringUtils.isNotEmpty(startTime) && !"###".equals(startTime)) {
-	        String[] timelist = startTime.split("###");
-	        if (timelist.length == 2) {
-	          String startdate = timelist[0].replaceAll("/", "");
-	          String startminu = timelist[1].replaceAll(":", "");
-	          collect.setStartTime(startdate + startminu);
-	        } else {
-	          collect.setStartTime(null);
-	        }
-	      } else {
-	        collect.setStartTime(null);
-	      }
-	      String recruitNum = collect.getRecruitNum();
-	      if (StringUtils.isNotEmpty(recruitNum)) {
-	        recruitNum = recruitNum.replace("人", "");
-	        collect.setRecruitNum(recruitNum);
-	      }
+				// 募集情報登録処理を行う
+				String courseId = IdGenerationLogic.getId(10);
+				collect.setCourseID(courseId);
+				collect.setRegDate(InsTstmp);
+				String playStyle = collect.getPlayStyle();
+				if (StringUtils.isNotEmpty(playStyle)) {
+					collect.setPlayStyle("エンジョイ".equals(playStyle) ? "0" : "1");
+				}
+				String playDate = collect.getPlayDate();
+				if (StringUtils.isNotEmpty(playDate)) {
+					playDate = playDate.replaceAll("/", "");
+					collect.setPlayDate(playDate);
+				}
+				String startTime = collect.getStartTime();
+				if (StringUtils.isNotEmpty(startTime) && !"###".equals(startTime)) {
+					String[] timelist = startTime.split("###");
+					
+					for(String s:timelist){
+						System.out.print(s);
+					}
+					if (timelist.length == 2) {
+						String startdate = timelist[0].replaceAll("/", "");
+						String startminu = timelist[1].replaceAll(":", "");
+						collect.setStartTime(startdate + startminu);
+					} else {
+						collect.setStartTime(null);
+					}
+				} else {
+					collect.setStartTime(null);
+				}
 
-	      String closeTime = collect.getCloseDate();
-	      if (StringUtils.isNotEmpty(closeTime) && !"###".equals(closeTime)) {
-	        String[] timelist = closeTime.split("###");
-	        if (timelist.length == 2) {
-	          String closedate = timelist[0].replaceAll("/", "");
-	          String closeminu = timelist[1].replaceAll(":", "");
-	          collect.setCloseDate(closedate + closeminu);
-	        } else {
-	          collect.setCloseDate(null);
-	        }
-	      } else {
-	        collect.setCloseDate(null);
-	      }
-	      collect.setStatus(CollectStateCode.INIT.code());
-	      
-	      
-	      RecruitInfo recruitInfo1 = new RecruitInfo();
-	      recruitInfo1.setRoundSerialNo(Integer.parseInt(nullToString(collect.getRoundSerialNo(), true).replace("'", "")));//返回的字符串带单引号
-	      recruitInfo1.setMemberID(nullToString(collect.getMemberID(), true));
-	      recruitInfo1.setCourseID(nullToString(collect.getCourseID(), true));
-	      recruitInfo1.setStartCourse(Integer.parseInt(nullToString("1", false)));
-	      recruitInfo1.setPlayDate(nullToString(collect.getPlayDate(), true));
-	      recruitInfo1.setStartTime(/*nullToString(collect.getStartTime(), true)*/startTime);
-	      recruitInfo1.setPlayStyle(nullToString(collect.getPlayStyle(), true));
-	      recruitInfo1.setPlayFee(Integer.parseInt(nullToString(collect.getPlayFee(), false)));
-	      recruitInfo1.setLunchFlag(Integer.parseInt(nullToString(collect.getLunchFlag(), false)));
-	      recruitInfo1.setRoundDetails(nullToString(collect.getRoundDetails(), true));
-	      recruitInfo1.setRecruitNum(Integer.parseInt(nullToString(collect.getRecruitNum(), false)));
-	      recruitInfo1.setRecruitRange(1);
-	      recruitInfo1.setComents(nullToString(collect.getComents(), true));
-	      recruitInfo1.setCloseDate(nullToString(collect.getCloseDate(), true));
-	      recruitInfo1.setPushFlag(nullToString(collect.getPushFlag(), true));
-	      recruitInfo1.setStatus(Integer.parseInt(nullToString(collect.getStatus(), false)));
-	      recruitInfo1.setRegDate(nullToString(collect.getRegDate(), true));
-	      recruitInfoRepository.save(recruitInfo1);
-	      
-	      CourseInfo courseInfo = new CourseInfo();
-	      courseInfo.setID(nullToString(collect.getCourseID(), true));
-	      courseInfo.setName(nullToString(collect.getCourseName(), true));
-	      courseInfo.setGolfcoursename(nullToString(collect.getGolfCourseName(), true));
-	      courseInfoRepository.save(courseInfo);
+				String recruitNum = collect.getRecruitNum();
+				if (StringUtils.isNotEmpty(recruitNum)) {
+					recruitNum = recruitNum.replace("人", "");
+					collect.setRecruitNum(recruitNum);
+				}
 
-	      return new DataResult<String>();
-	    } catch (Exception e) {
-	      logger.error(e.getMessage());
-	      return new DataResult<String>(ResultCode.NG.code(), "募集情報が登録失敗しました。");
-	    }
-	}
-  /*public DataResult<String> save(Collect collect) {
+				String closeTime = collect.getCloseDate();
+				if (StringUtils.isNotEmpty(closeTime) && !"###".equals(closeTime)) {
+					String[] timelist = closeTime.split("###");
+					if (timelist.length == 2) {
+						String closedate = timelist[0].replaceAll("/", "");
+						String closeminu = timelist[1].replaceAll(":", "");
+						collect.setCloseDate(closedate + closeminu);
+					} else {
+						collect.setCloseDate(null);
+					}
+				} else {
+					collect.setCloseDate(null);
+				}
+				collect.setStatus(CollectStateCode.INIT.code());
+				// 募集情報更新用エンティティを作成する
+				RecruitInfo updateRecruitInfo = new RecruitInfo();
+				// 募集ID
+				updateRecruitInfo.setRoundSerialNo(Integer.valueOf(collect.getRoundSerialNo()));
+				// 主催者ID
+				updateRecruitInfo.setMemberID(collect.getMemberID());
+				// コースID
+				updateRecruitInfo.setCourseID(collect.getCourseID());
+				// スタートコース
+				updateRecruitInfo.setStartCourse(1);
+				// プレイ日
+				updateRecruitInfo.setPlayDate(collect.getPlayDate());
+				// スタート時間
+				updateRecruitInfo.setStartTime(collect.getStartTime());
+				// プレースタイル
+				updateRecruitInfo.setPlayStyle(collect.getPlayStyle());
+				// プレー料金
+				updateRecruitInfo
+						.setPlayFee(StringUtils.isEmpty(collect.getPlayFee()) ? 0 : Integer.parseInt(collect.getPlayFee()));
+				// ランチ含む
+				updateRecruitInfo.setLunchFlag(
+						StringUtils.isEmpty(collect.getLunchFlag()) ? 0 : Integer.valueOf(collect.getLunchFlag()));
+				// 予約詳細
+				updateRecruitInfo.setRoundDetails(collect.getRoundDetails());
+				// 募集人数
+				updateRecruitInfo.setRecruitNum(
+						StringUtils.isEmpty(collect.getRecruitNum()) ? 0 : Integer.valueOf(collect.getRecruitNum()));
+				// 募集範囲
+				updateRecruitInfo.setRecruitRange(
+						StringUtils.isEmpty(collect.getRecruitRange()) ? 1 : Integer.parseInt(collect.getRecruitRange()));
+				// 参加者へのコメント
+				updateRecruitInfo.setComents(collect.getComents());
+				// 締切日時
+				updateRecruitInfo.setCloseDate(collect.getCloseDate());
+				// 通知希望フラグ
+				updateRecruitInfo.setPushFlag(collect.getPushFlag());
+				// 募集進行状況
+				updateRecruitInfo
+						.setStatus(StringUtils.isEmpty(collect.getStatus()) ? null : Integer.valueOf(collect.getStatus()));
+				// 登録日時
+				updateRecruitInfo.setRegDate(collect.getRegDate());
+				recruitInfoRepository.save(updateRecruitInfo);
+
+				// コース情報を登録する
+				CourseInfo courseInfo = new CourseInfo();
+				// ID
+				courseInfo.setId(collect.getCourseID());
+				// コース名
+				courseInfo.setName(collect.getCourseName());
+				// ゴルフコース名
+				courseInfo.setGolfCourseName(collect.getGolfCourseName());
+				// 登録する
+				courseInfoRepository.save(courseInfo);//保存数据时报错 Unknown column 'e' in 'field list'
+				return new DataResult<String>();
+			} catch (Exception e) {
+				e.printStackTrace();
+				logger.error(e.toString());
+				return new DataResult<String>(ResultCode.NG.code(), "募集情報が登録失敗しました。");
+			}
+		}  /*public DataResult<String> save(Collect collect) {
     try {
       Calendar cal = dateLogicUtils.getCurrent();
       String InsTstmp = dateLogicUtils.getCurrentTimeString(cal);
@@ -269,6 +306,7 @@ public class CollectService {
    * @return 募集情報
    */
   
+  //TODO 子查询未检测
   @SuppressWarnings("rawtypes")
   public DataResult<CollectSearchResult> search(String playDate, String area, String golfBarName,
       String pageMode, String memberId, String roundSerialNo) {
@@ -303,50 +341,51 @@ public class CollectService {
         }
       }
     }
-
     if (StringUtils.isEmpty(playDate)) {
       // 情報が存在しない
       return new DataResult<CollectSearchResult>("E001", "募集情報がありません");
     }
-    
-    if (StringUtils.isNotEmpty(roundSerialNo)) {}    
-    
-    if (StringUtils.isNotEmpty(memberId)) {}
 
-    
-    
-  //TODO 未做  
-    StringBuffer sbWhere = new StringBuffer();
-    String sql = "select RecruitInfo.*,CourseInfo.GolfCourseName, CourseInfo.`Name` AS CourseName , ApplyInfo.ApovStatus , APOVCnt.ApovCnt "
-        + " from RecruitInfo INNER JOIN CourseInfo ON CourseInfo.ID = RecruitInfo.CourseID"
-        + " LEFT JOIN ApplyInfo ON ApplyInfo.RoundSerialNo =RecruitInfo.RoundSerialNo AND  ApplyInfo.MemberID = '"
-        + memberId + "'"
-        + " LEFT JOIN (select count(0) as ApovCnt, RoundSerialNo from ApplyInfo where ApovStatus = '"
-        + ApovStatusCode.ApovOK.code() + "' group by RoundSerialNo) APOVCnt"
-        + " ON APOVCnt.RoundSerialNo =RecruitInfo.RoundSerialNo ";
+    Specification<RecruitInfo> specification = new Specification<RecruitInfo>(){
 
-    sbWhere.append("RecruitInfo.DelFlg = '0' and ");
-    sbWhere.append("PlayDate= '" + playDate + "' and ");
-    
-    
-    
-    if (StringUtils.isNotEmpty(roundSerialNo)) {
-      sbWhere.append(" RecruitInfo.RoundSerialNo= '" + roundSerialNo + "' and ");
-    }
-    if (StringUtils.isNotEmpty(memberId)) {
-      sbWhere.append(" RecruitInfo.MemberID != '" + memberId + "' and ");
-    }
-    
-    
-    
-    
-    sbWhere.append(" (RecruitInfo.Status  is null OR  RecruitInfo.Status  != "
-        + CollectStateCode.DELETE.code() + ")");
+    	//tmp data
+    	String playDate = "20190120";
+    	
+		private static final long serialVersionUID = -3777344393747644910L;
+		List<Predicate> predicateList = new ArrayList<Predicate>();
+		
+		@Override
+		public Predicate toPredicate(Root<RecruitInfo> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
+			
+			CriteriaQuery<RecruitInfo> recruitInfoQuery = criteriaBuilder.createQuery(RecruitInfo.class);
+			Root<Applyinfo> applyInfoRoot = query.from(Applyinfo.class);
+			Join<CourseInfo,RecruitInfo> courseInfoJoin = root.join("courseInfo", JoinType.INNER);
+			Join<Applyinfo,RecruitInfo>  applyInfoJoin = root.join("applyinfo",JoinType.LEFT);
+			applyInfoJoin.on(criteriaBuilder.equal(applyInfoRoot.get("memberId"),memberId ));
+			//子查询join未写
+			/*Subquery<RecruitInfo> subquery = RecruitInfoQuery.subquery(RecruitInfo.class);
+			Root<Applyinfo> applyinfoRoot = subquery.from(Applyinfo.class);
+			Subquery subqueryWhere = subquery.where(criteriaBuilder.equal(applyinfoRoot.get("apovstatus"), ApovStatusCode.ApovOK.code())).groupBy(applyinfoRoot.get("roundserialno"));*/
+			
+			predicateList.add(criteriaBuilder.equal(root.get("delFlg"), 0)); 
+			predicateList.add(criteriaBuilder.equal(root.get("playDate"), playDate));
+			
+			if (StringUtils.isNotEmpty(roundSerialNo)) {
+				predicateList.add(criteriaBuilder.equal(root.get("roundSerialNo"), roundSerialNo));
+			    }
+			
+		    if (StringUtils.isNotEmpty(memberId)) {
+		    	predicateList.add(criteriaBuilder.equal(root.get("memberID"), memberId));
+		      }
+					
+		    predicateList.add(criteriaBuilder.or(criteriaBuilder.isNull(root.get("status")),criteriaBuilder.notEqual(root.get("status"), CollectStateCode.DELETE.code())));
+			
+			return recruitInfoQuery.select(courseInfoJoin).select(applyInfoJoin).where(
+					criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]))).getRestriction();
+		}};
 
-    sql = sql + " where " + sbWhere.toString();
-    logger.debug("search sql:==" + sql);
-    try {
-      List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
+	  try{
+      List<RecruitInfo> list = recruitInfoRepository.findAll(specification);
       if (list == null || list.size() == 0) {
         // 情報が存在しない
         return new DataResult<CollectSearchResult>("E001", "募集情報がありません");
@@ -354,7 +393,7 @@ public class CollectService {
       CollectSearchResult resultList = new CollectSearchResult();
       resultList.setHasPrePage(hasDatePage(playDate, memberId, PRE_DATE) != null);
       resultList.setHasNextPage(hasDatePage(playDate, memberId, NEXT_DATE) != null);
-      resultList.setSearchResultList(list);
+      //resultList.setSearchResultList(list);
       resultList.setSearchPlayDate(playDate);
       return new DataResult<CollectSearchResult>(resultList);
     } catch (Exception e) {
@@ -539,52 +578,20 @@ public class CollectService {
   
   public DataResult<CollectSearchResult> cancel(String playDate, String area, String golfBarName,
 	      String pageMode, String memberId, String roundSerialNo) {
-	  	
-	  Specification<Applyinfo> specification = new Specification<Applyinfo>(){
-
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Predicate toPredicate(Root<Applyinfo> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-			
-			Path<String> exp1 = root.get("memberid");
-			Path<Integer> exp2 = root.get("roundserialno");
-			Path<String> exp3 = root.get("apovstatus");
-			
-			return criteriaBuilder.and(
-					criteriaBuilder.equal(exp1,nullToString(memberId, true)),
-					criteriaBuilder.equal(exp2,nullToString(roundSerialNo, false)),
-					criteriaBuilder.equal(exp3, ApovStatusCode.UNApov.code())
-					);
-		}
-	  };	
-	  List<Applyinfo> list = applyInfoRepository.findAll(specification);
 	  
-	  if (list == null || list.size() == 0) {
-	      return new DataResult<CollectSearchResult>(ResultCode.NG.code(), "この応募が取消できません。");
-	    }
-	  
-	  String regNo = StringUtils.toStr(list.get(0).getRegno());
-	  //----------------------------findByLastnameAndFirstname
-	  Specification<Applyinfo> specification1 = new Specification<Applyinfo>(){
-
-			@Override
-			public Predicate toPredicate(Root<Applyinfo> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-				
-				Path<Integer> exp1 = root.get("roundserialno");
-				Path<Integer> exp2 = root.get("regno");	
-				
-				return criteriaBuilder.and(
-						criteriaBuilder.equal(exp1,nullToString(roundSerialNo, false)),
-						criteriaBuilder.equal(exp2,nullToString(regNo, false)));
+	// 自分の応募情報を検索する
+			List<Applyinfo> applyInfoList = applyInfoRepository.findByMemberIdAndRoundSerialNoAndApovStatus(memberId,
+					Integer.parseInt(roundSerialNo), ApovStatusCode.UNApov.code());
+			if (applyInfoList == null || applyInfoList.size() == 0) {
+				return new DataResult<CollectSearchResult>(ResultCode.NG.code(), "この応募が取消できません。");
 			}
-		  };
-		  
-		List<Applyinfo> list1 = applyInfoRepository.findAll(specification1);
-		
-		//applyInfoRepository.deleteAll(list1);
-	  
-	    return search(playDate, area, golfBarName, pageMode, memberId, roundSerialNo);
+			int regNo = applyInfoList.get(0).getRegNo();
+			
+			// 募集情報の削除処理
+			//applyInfoRepository.deleteByRoundSerialNoAndRegNo(Integer.parseInt(roundSerialNo), regNo);//加了@Transactional还是报错No EntityManager with actual transaction available for current thread - cannot reliably process 'remove' call
+			applyInfoRepository.delete(applyInfoList.get(0));
+			// 募集情報を返却する
+			return search(playDate, area, golfBarName, pageMode, memberId, roundSerialNo);
 	  }
   
   
@@ -607,6 +614,9 @@ public class CollectService {
     sql = String.format(sql, nullToString(roundSerialNo, false), nullToString(regNo, false));
     logger.debug("delete ApplyInfo sql:==" + sql);
     jdbcTemplate.execute(sql);
+    
+    
+    
     return search(playDate, area, golfBarName, pageMode, memberId, roundSerialNo);
   }*/
 
@@ -639,7 +649,86 @@ public class CollectService {
    * @return
    */
   
-  public DataResult<String> updateDetail(Collect collect) {
+	public DataResult<String> updateDetail(Collect collect) {
+		logger.debug("startTime before:" + collect.getStartTime());
+		RecruitInfo recruitInfo = recruitInfoRepository
+				.findByRoundSerialNo(Integer.parseInt(collect.getRoundSerialNo()));
+		if (recruitInfo == null) {
+			return new DataResult<String>(ResultCode.NG.code(), "この応募情報がありません。");
+		}
+		// コースIDを取得する
+		String courseID = recruitInfo.getCourseID();
+
+		String playStyle = collect.getPlayStyle();
+		if (StringUtils.isNotEmpty(playStyle)) {
+			collect.setPlayStyle("エンジョイ".equals(playStyle) ? "0" : "1");
+		}
+		String playDate = collect.getPlayDate();
+		if (StringUtils.isNotEmpty(playDate)) {
+			playDate = playDate.replaceAll("/", "");
+			collect.setPlayDate(playDate);
+		}
+
+		if (StringUtils.isNotEmpty(collect.getStartTime()) && !"###".equals(collect.getStartTime())) {
+			String startTime = collect.getStartTime().trim();
+			String[] timelist = startTime.split("###");
+			if (timelist.length == 2) {
+				String startdate = timelist[0].replaceAll("/", "");
+				String startminu = timelist[1].replaceAll(":", "");
+				collect.setStartTime(startdate + startminu);
+			} else {
+				collect.setStartTime(null);
+			}
+		} else {
+			collect.setStartTime(null);
+		}
+		logger.debug("startTime after:" + collect.getStartTime());
+
+		String recruitNum = collect.getRecruitNum();
+		if (StringUtils.isNotEmpty(recruitNum)) {
+			recruitNum = recruitNum.replace("人", "");
+			collect.setRecruitNum(recruitNum);
+		}
+
+		if (StringUtils.isNotEmpty(collect.getCloseDate()) && !"###".equals(collect.getCloseDate())) {
+			String closeTime = collect.getCloseDate().trim();
+			String[] timelist = closeTime.split("###");
+			if (timelist.length == 2) {
+				String closedate = timelist[0].replaceAll("/", "");
+				String closeminu = timelist[1].replaceAll(":", "");
+				collect.setCloseDate(closedate + closeminu);
+			} else {
+				collect.setCloseDate(null);
+			}
+		} else {
+			collect.setCloseDate(null);
+		}
+
+		// 募集情報を更新する
+		recruitInfo.setStartCourse(1);
+		recruitInfo.setPlayDate(collect.getPlayDate());
+		recruitInfo.setStartTime(collect.getStartTime());
+		recruitInfo.setPlayStyle(collect.getPlayStyle());
+		recruitInfo.setPlayFee(StringUtils.isEmpty(collect.getPlayFee()) ? 0 : Integer.valueOf(collect.getPlayFee()));
+		recruitInfo.setLunchFlag(
+				StringUtils.isEmpty(collect.getLunchFlag()) ? 0 : Integer.valueOf(collect.getLunchFlag()));
+		recruitInfo.setRoundDetails(collect.getRoundDetails());
+		recruitInfo.setRecruitNum(
+				StringUtils.isEmpty(collect.getRecruitNum()) ? 0 : Integer.valueOf(collect.getRecruitNum()));
+		recruitInfo.setRecruitRange(
+				StringUtils.isEmpty(collect.getRecruitRange()) ? 1 : Integer.parseInt(collect.getRecruitRange()));
+		recruitInfo.setComents(collect.getComents());
+		recruitInfo.setCloseDate(collect.getCloseDate());
+		recruitInfo.setPushFlag(collect.getPushFlag());
+		// 更新処理を行う
+		recruitInfoRepository.save(recruitInfo);
+
+		// コース情報を更新する
+		courseInfoRepository.updateCourseInfo(collect.getCourseName(), collect.getGolfCourseName(), courseID);
+		return new DataResult<String>(ResultCode.OK.code(), "この応募情報が更新しました。");
+	}
+  
+  /*public DataResult<String> updateDetail(Collect collect) {
 	    logger.debug("startTime before:" + collect.getStartTime());
 	    
 	 // 応募情報があるかを確認する
@@ -712,15 +801,15 @@ public class CollectService {
 	    recruitInfo.setPushFlag(nullToString(collect.getPushFlag(), true));
 	    recruitInfoRepository.save(recruitInfo);
 	    
-	    CourseInfo courseInfo = courseInfoRepository.findByID(nullToString(courseID, true));
+	    CourseInfo courseInfo = courseInfoRepository.findById(nullToString(courseID, true));
 	    
 	    courseInfo.setName(nullToString(collect.getCourseName(), true));
-	    courseInfo.setGolfcoursename(nullToString(collect.getGolfCourseName(), true));
+	    courseInfo.setGolfCourseName(nullToString(collect.getGolfCourseName(), true));
 	    courseInfoRepository.save(courseInfo);
 	    
 	    return new DataResult<String>(ResultCode.OK.code(), "この応募情報が更新しました。");
 	  }
-  
+*/  
   
   /*public DataResult<String> updateDetail(Collect collect) {
     logger.debug("startTime before:" + collect.getStartTime());
@@ -806,10 +895,10 @@ public class CollectService {
    * @param isPre
    * @return
    */
-  
+  //TODO 无接口测试
   private String hasDatePage(String playDate, String memberId, String selectFlg) {
-	    StringBuffer sql = new StringBuffer();
-	    String sortType = "ASC";
+
+	  String sortType = "ASC";
 	    
 	    Specification<RecruitInfo> specification = new Specification<RecruitInfo>(){
 
@@ -847,21 +936,16 @@ public class CollectService {
 			}
 		  };
 		  
-		  //TODO 未做
-	    sql.append(" order by PlayDate " + sortType + " limit 1");
+		 // List<RecruitInfo> list = recruitInfoRepository.findAll(specification);
+		List<RecruitInfo> list = recruitInfoRepository.findAll(specification,new Sort(Direction.DESC, "playDate"));
 
-	    List<Map<String, Object>> list = jdbcTemplate.queryForList(sql.toString());
 	    String otherPlayDate = null;
 	    if (list != null && list.size() > 0) {
-	      otherPlayDate = StringUtils.toStr(list.get(0).get("PlayDate"));
+	      otherPlayDate = StringUtils.toStr(list.get(0).getPlayDate());
 	    }
 	    return otherPlayDate;
 	  }
 
-
-
-
-  
   
   /*private String hasDatePage(String playDate, String memberId, String selectFlg) {
     StringBuffer sql = new StringBuffer();
@@ -900,6 +984,8 @@ public class CollectService {
     return isString ? "'" + target + "'" : target;
   }*/
 
+  
+  
 	  public DataResult<CollectSearchResult> deleteSelfApplyInfo(String roundSerialNo,
 		      String memberId) {
 		    // 自分の応募情報を検索する
@@ -912,9 +998,9 @@ public class CollectService {
 					
 					List<Predicate> predicateList = new ArrayList<Predicate>();
 
-					predicateList.add(criteriaBuilder.equal(root.get("memberid"),nullToString(memberId, true)));
-					predicateList.add(criteriaBuilder.equal(root.get("roundserialno"),nullToString(roundSerialNo, false)));
-					predicateList.add(criteriaBuilder.equal(root.get("apovstatus"), ApovStatusCode.UNApov.code()));
+					predicateList.add(criteriaBuilder.equal(root.get("memberId"),nullToString(memberId, true)));
+					predicateList.add(criteriaBuilder.equal(root.get("roundSerialNo"),nullToString(roundSerialNo, false)));
+					predicateList.add(criteriaBuilder.equal(root.get("apovStatus"), ApovStatusCode.UNApov.code()));
 					
 					Predicate[] pre = new Predicate[predicateList.size()];
 					query.where(predicateList.toArray(pre));
@@ -927,8 +1013,9 @@ public class CollectService {
 		    if (applyinfoList == null || applyinfoList.size() == 0) {
 		      return new DataResult<CollectSearchResult>(ResultCode.NG.code(), "この応募が取消できません。");
 		    }
-		    int regNo =applyinfoList.get(0).getRegno();
-		    applyInfoRepository.deleteByRoundserialnoAndRegno(Integer.parseInt(nullToString(roundSerialNo, false)), regNo);
+		    int regNo =applyinfoList.get(0).getRegNo();
+		    //TODO 添加事物 还是报错No EntityManager with actual transaction available for current thread - cannot reliably process 'remove' call
+		    applyInfoRepository.deleteByRoundSerialNoAndRegNo(Integer.parseInt(nullToString(roundSerialNo, false)), regNo);
 		    
 		    return new DataResult<CollectSearchResult>(ResultCode.OK.code(), "この応募が取消しました。");
 		  } 
@@ -955,16 +1042,23 @@ public class CollectService {
     return new DataResult<CollectSearchResult>(ResultCode.OK.code(), "この応募が取消しました。");
   }
 */
-  public DataResult<List> searchRakutenGolfCourseInformation() {
+	  
+	  public DataResult<List> searchRakutenGolfCourseInformation() {
+		  List<RakutenGolfCourseInfo> rakutenGolfCourseInfoList =  rakutenGolfCourseInfoRepository.findAll();
+		  return new DataResult<List>(rakutenGolfCourseInfoList);
+		  }
+	  
+  /*public DataResult<List> searchRakutenGolfCourseInformation() {
     String sql = "select GolfCourseId, GolfCourseName, GolfCourseAbbr from RakutenGolfCourseInfo";
     logger.debug("select RakutenGolfCourseInfo sql:==" + sql);
     List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
     return new DataResult<List>(list);
-  }
+  }*/
   private static String nullToString(String target, boolean isString) {
 	    if (StringUtils.isEmpty(target)) {
 	      return null;
 	    }
-	    return isString ? "'" + target + "'" : target;
+	    //return isString ? "'" + target + "'" : target;
+	    return target;
 	  }
 }

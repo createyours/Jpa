@@ -1,150 +1,88 @@
+//****************************************************************************//
+// システム         : Golf
+//----------------------------------------------------------------------------//
+//                (c)Copyright 2018 LeadingSoft All rights reserved.
+//============================================================================//
 package org.leadingsoft.golf.api.entity;
 
 import java.io.Serializable;
-import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
+import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 
 /**
-*  応募情報
-*/
+ * <pre>
+ * 応募情報エンティティ
+ * </pre>
+ */
+@Data
 @Entity
-@Table(name="applyinfo")
+@Table(name="ApplyInfo")
 @IdClass(ApplyInfoPK.class)
 public class Applyinfo implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
-    /**
-    * 募集id
-    */
-    private int roundserialno;
-    
-    @OneToOne(targetEntity=MemberInfo.class,fetch=FetchType.EAGER,cascade=CascadeType.ALL)
-    @JoinColumn(name="memberID")//private MemberInfo memberInfo 的memberInfo.memberID
-    private MemberInfo memberInfo;
-    /**
-    * 応募者id
-    */
-    private String memberid;
 
+	/** serialVersionUID */
+	private static final long serialVersionUID = -1525115654770978237L;
 
+	/** 募集ID */
 	@Id
-    @GeneratedValue
-    /**
-    * 受付通番
-    */
-    private int regno;
+	@Column(name = "RoundSerialNo")
+	@JsonProperty(value = "RoundSerialNo")
+	private Integer roundSerialNo;
 
-    /**
-    * s varchar(256)
-    */
-    private String comments;
+	/** 応募者ID */
+	@Column(name = "MemberID")
+	@JsonProperty(value = "MemberID")
+	private String memberId;
 
-    /**
-    * キャンセルフラグ
-    */
-    private String cancelflag;
+	/** 受付通番 */
+	@Id
+	@Column(name = "RegNo",insertable=false,updatable=false)
+	@JsonProperty(value = "RegNo")
+	private Integer regNo;
 
-    /**
-    * キャンセル待ちフラグ
-    */
-    private String waitflag;
+	/** 主催者へのコメント */
+	@JsonProperty(value = "Comments")
+	private String comments;
 
-    /**
-    * チャット内容:応募者と主催者の間でチャットする内容（チャットを提供してから使う予備フィールド）
-    */
-    private String chatcontents;
-    
-    /**
-    * 承認ステータス
-    */
-    private String apovstatus;
-    
-    public MemberInfo getMemberInfos() {
-		return memberInfo;
-	}
+	/** キャンセルフラグ */
+	@JsonProperty(value = "CancelFlag")
+	private String cancelFlag;
 
-	public void setMemberInfos(MemberInfo memberInfo) {
-		this.memberInfo = memberInfo;
-	}
+	/** キャンセル待ちフラグ */
+	@JsonProperty(value = "WaitFlag")
+	private String waitFlag;
 
-	public int getRoundserialno() {
-		return roundserialno;
-	}
+	/** チャット内容 */
+	@JsonProperty(value = "ChatContents")
+	private String chatContents;
 
-	public void setRoundserialno(int roundserialno) {
-		this.roundserialno = roundserialno;
-	}
+	/** 承認ステータス */
+	@JsonProperty(value = "ApovStatus")
+	private String apovStatus;
 
-	public String getMemberid() {
-		return memberid;
-	}
-
-	public void setMemberid(String memberid) {
-		this.memberid = memberid;
-	}
-
-	public int getRegno() {
-		return regno;
-	}
-
-	public void setRegno(int regno) {
-		this.regno = regno;
-	}
-
-	public String getComments() {
-		return comments;
-	}
-
-	public void setComments(String comments) {
-		this.comments = comments;
-	}
-
-	public String getCancelflag() {
-		return cancelflag;
-	}
-
-	public void setCancelflag(String cancelflag) {
-		this.cancelflag = cancelflag;
-	}
-
-	public String getWaitflag() {
-		return waitflag;
-	}
-
-	public void setWaitflag(String waitflag) {
-		this.waitflag = waitflag;
-	}
-
-	public String getChatcontents() {
-		return chatcontents;
-	}
-
-	public void setChatcontents(String chatcontents) {
-		this.chatcontents = chatcontents;
-	}
-
-	public String getApovstatus() {
-		return apovstatus;
-	}
-
-	public void setApovstatus(String apovstatus) {
-		this.apovstatus = apovstatus;
-	}
-
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
+	/** 会員情報 */
+	@JsonIgnore
+	@ManyToOne(cascade={CascadeType.MERGE,CascadeType.REFRESH})
+	@JoinColumn(name = "MemberID",referencedColumnName = "MemberID", insertable=false, updatable=false)
+	private MemberInfo memberInfo;
+	//似乎是要联合主键的表先关联才行
+	@OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@JoinColumn(name = "RoundSerialNo",insertable=false,updatable=false)
+	private RecruitInfo recruitInfo;
+	
 }

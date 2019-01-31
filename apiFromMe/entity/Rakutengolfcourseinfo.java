@@ -1,216 +1,94 @@
+//****************************************************************************//
+// システム         : Golf
+//----------------------------------------------------------------------------//
+//                (c)Copyright 2018 LeadingSoft All rights reserved.
+//============================================================================//
 package org.leadingsoft.golf.api.entity;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import lombok.Data;
+
 /**
-*  楽天ゴルフ場基本情報
-* @author 大狼狗 2019-01-18
-*/
+ * <pre>
+ * 楽天ゴルフ場基本情報エンティティ
+ * </pre>
+ */
+@Data
 @Entity
-@Table(name="rakutengolfcourseinfo")
-public class Rakutengolfcourseinfo implements Serializable {
-    private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue
-    /**
-    * ゴルフ場id
-    */
-    private String golfcourseid;
+@Table(name="RakutenGolfCourseInfo")
+public class RakutenGolfCourseInfo implements Serializable {
 
-    /**
-    * ゴルフ場名
-    */
-    private String golfcoursename;
+	/** serialVersionUID */
+	private static final long serialVersionUID = 8752549003811290133L;
 
-    /**
-    * ゴルフ場名(略称)
-    */
-    private String golfcourseabbr;
+	/** ゴルフ場ID */
+	@Id
+	@JsonProperty(value = "GolfCourseId")
+	private String golfCourseId;
 
-    /**
-    * かな名
-    */
-    private String namek;
+	/** ゴルフ場名 */
+	@JsonProperty(value = "GolfCourseName")
+	private String golfCourseName;
 
-    /**
-    * 都道府県
-    */
-    private String state;
+	/** ゴルフ場名(略称) */
+	@JsonProperty(value = "GolfCourseAbbr")
+	private String golfCourseAbbr;
 
-    /**
-    * 住所
-    */
-    private String address;
+	/** かな名 */
+	@Column(name = "Name_k")
+	@JsonProperty(value = "Name_k")
+	private String namek;
 
-    /**
-    * 電話番号
-    */
-    private String tel;
+	/** 都道府県 */
+	@JsonProperty(value = "State")
+	private String state;
 
-    /**
-    * 経度
-    */
-    private float longitude;
+	/** 住所 */
+	@JsonProperty(value = "Address")
+	private String address;
 
-    /**
-    * 緯度
-    */
-    private float latitude;
+	/** 電話番号 */
+	@JsonProperty(value = "Tel")
+	private String tel;
 
-    /**
-    * 説明
-    */
-    private String caption;
+	/** 経度 */
+	@JsonProperty(value = "Longitude")
+	private Float longitude;
 
-    /**
-    * コースタイプ:山岳、丘陵、林間など
-    */
-    private int type;
+	/** 緯度 */
+	@JsonProperty(value = "Latitude")
+	private Float latitude;
 
-    public String getGolfcourseid() {
-		return golfcourseid;
-	}
+	/** 説明 */
+	@JsonProperty(value = "Caption")
+	private String caption;
 
-	public void setGolfcourseid(String golfcourseid) {
-		this.golfcourseid = golfcourseid;
-	}
+	/** コースタイプ:山岳、丘陵、林間など */
+	@JsonProperty(value = "Type")
+	private Integer type;
 
-	public String getGolfcoursename() {
-		return golfcoursename;
-	}
+	/** 評価１:楽天評価 */
+	@JsonProperty(value = "Point1")
+	private Float point1;
 
-	public void setGolfcoursename(String golfcoursename) {
-		this.golfcoursename = golfcoursename;
-	}
+	/** 評価２:GDO評価 */
+	@JsonProperty(value = "Point2")
+	private Float point2;
 
-	public String getGolfcourseabbr() {
-		return golfcourseabbr;
-	}
+	/** 評価３:その他評価 */
+	@JsonProperty(value = "Point3")
+	private Float point3;
 
-	public void setGolfcourseabbr(String golfcourseabbr) {
-		this.golfcourseabbr = golfcourseabbr;
-	}
-
-	public String getNamek() {
-		return namek;
-	}
-
-	public void setNamek(String namek) {
-		this.namek = namek;
-	}
-
-	public String getState() {
-		return state;
-	}
-
-	public void setState(String state) {
-		this.state = state;
-	}
-
-	public String getAddress() {
-		return address;
-	}
-
-	public void setAddress(String address) {
-		this.address = address;
-	}
-
-	public String getTel() {
-		return tel;
-	}
-
-	public void setTel(String tel) {
-		this.tel = tel;
-	}
-
-	public float getLongitude() {
-		return longitude;
-	}
-
-	public void setLongitude(float longitude) {
-		this.longitude = longitude;
-	}
-
-	public float getLatitude() {
-		return latitude;
-	}
-
-	public void setLatitude(float latitude) {
-		this.latitude = latitude;
-	}
-
-	public String getCaption() {
-		return caption;
-	}
-
-	public void setCaption(String caption) {
-		this.caption = caption;
-	}
-
-	public int getType() {
-		return type;
-	}
-
-	public void setType(int type) {
-		this.type = type;
-	}
-
-	public float getPoint1() {
-		return point1;
-	}
-
-	public void setPoint1(float point1) {
-		this.point1 = point1;
-	}
-
-	public float getPoint2() {
-		return point2;
-	}
-
-	public void setPoint2(float point2) {
-		this.point2 = point2;
-	}
-
-	public float getPoint3() {
-		return point3;
-	}
-
-	public void setPoint3(float point3) {
-		this.point3 = point3;
-	}
-
-	public String getOther() {
-		return other;
-	}
-
-	public void setOther(String other) {
-		this.other = other;
-	}
-
-	/**
-    * 評価１:楽天評価
-    */
-    private float point1;
-
-    /**
-    * 評価２:gdo評価
-    */
-    private float point2;
-
-    /**
-    * 評価３:その他評価
-    */
-    private float point3;
-
-    /**
-    * その他
-    */
-    private String other;
-
+	/** その他 */
+	@JsonProperty(value = "Other")
+	private String other;
 
 }

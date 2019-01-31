@@ -3,9 +3,9 @@ package org.leadingsoft.golf.api.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.leadingsoft.golf.api.entity.Rakutengolfcourseinfo;
+import org.leadingsoft.golf.api.entity.RakutenGolfCourseInfo;
 import org.leadingsoft.golf.api.model.GolfCourseInfo;
-import org.leadingsoft.golf.api.repository.RakutengolfcourseinfoRepository;
+import org.leadingsoft.golf.api.repository.RakutenGolfCourseInfoRepository;
 import org.leadingsoft.golf.api.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class GoraGolfCourseService {
   private JdbcTemplate jdbcTemplate;
   
   @Autowired
-  private RakutengolfcourseinfoRepository rakutengolfcourseinfoRepository;
+  private RakutenGolfCourseInfoRepository rakutengolfcourseinfoRepository;
 
   public void saveCourseInfo() {
 //    if (firstInsert) {
@@ -59,10 +59,10 @@ public class GoraGolfCourseService {
 
     for (GolfCourseInfo courseInfo : courseInfoList) {
     	
-    	Rakutengolfcourseinfo rakutengolfcourseinfo = new Rakutengolfcourseinfo();
-    	rakutengolfcourseinfo.setGolfcourseid(nullToString(courseInfo.getGolfCourseId(), true));
-    	rakutengolfcourseinfo.setGolfcoursename(nullToString(courseInfo.getGolfCourseName(), true));
-    	rakutengolfcourseinfo.setGolfcourseabbr(nullToString(courseInfo.getGolfCourseAbbr(), true));
+    	RakutenGolfCourseInfo rakutengolfcourseinfo = new RakutenGolfCourseInfo();
+    	rakutengolfcourseinfo.setGolfCourseId(nullToString(courseInfo.getGolfCourseId(), true));
+    	rakutengolfcourseinfo.setGolfCourseName(nullToString(courseInfo.getGolfCourseName(), true));
+    	rakutengolfcourseinfo.setGolfCourseAbbr(nullToString(courseInfo.getGolfCourseAbbr(), true));
     	rakutengolfcourseinfoRepository.save(rakutengolfcourseinfo);
     }
     logger.info("insert RakutenGolfCourseInfo total ： " + courseInfoList.size());
